@@ -4,6 +4,8 @@ $url2 = "https://github.com/appleplectic/verbatim-patched/raw/main/DebateStartup
 $folder1 = Join-Path $env:APPDATA "Microsoft\Templates"
 $folder2 = Join-Path $env:APPDATA "Microsoft\Word\STARTUP"
 
+Write-Host "Creating directories for Templates and STARTUP..."
+
 if (-not (Test-Path -Path $folder1)) {
     New-Item -ItemType Directory -Path $folder1
 }
@@ -12,10 +14,27 @@ if (-not (Test-Path -Path $folder2)) {
     New-Item -ItemType Directory -Path $folder2
 }
 
+$process = Get-Process -Name WINWORD -ErrorAction SilentlyContinue
+if (-not $process) {
+    Write-Host "Microsoft Word is currently running."
+    Read-Host "Press ENTER to quit the process and continue with installing Verbatim Patched, or press Ctrl+C to quit this program. WARNING: Progress may not be saved in open files. Continue? "
+    Stop-Process -Name WINWORD -Force
+    Write-Host "Microsoft Word has been terminated."
+}
+
+Write-Host "Downloading patched Verbatim files from GitHub..."
+
 $destFile1 = Join-Path $folder1 "Debate.dotm"
 $destFile2 = Join-Path $folder2 "DebateStartup.dotm"
 
 Invoke-WebRequest -Uri $url1 -OutFile $destFile1
 Invoke-WebRequest -Uri $url2 -OutFile $destFile2
 
-Write-Host "Files have been downloaded and saved in respective folders."
+Write-Host "Files have been downloaded and saved in respective folders. Opening Word..."
+$wordPath = "$env:ProgramFiles\Microsoft Office\root\Office16\WINWORD.EXE"
+if (Test-Path $wordPath) {
+    Start-Process -FilePath $wordPath
+    Write-Host "Microsoft Word has been opened and Verbatim has been installed."
+} else {
+    Write-Host "Microsoft Word executable not found; please open manually. Verbatim should have been installed."
+}
